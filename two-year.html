@@ -1,0 +1,375 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <title>宝贝两周岁 - 彩虹糖果手账墙</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.5.13/cropper.min.css">
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=ZCOOL+KuaiLe&display=swap');
+
+        :root {
+            --bg-purple: #9b5de5;
+            --white: #ffffff;
+            --candy-pink: #f15bb5;
+            --candy-yellow: #fee440;
+            --candy-blue: #00bbf9;
+            --candy-orange: #fb8500;
+            --candy-green: #00f5d4;
+            --dark: #2d2d2d;
+        }
+
+        body, html {
+            margin: 0; padding: 0;
+            width: 100%; height: 100%;
+            overflow: hidden;
+            background-color: var(--bg-purple);
+            background-image: radial-gradient(rgba(255,255,255,0.15) 3px, transparent 3px);
+            background-size: 70px 70px;
+            font-family: 'ZCOOL KuaiLe', cursive;
+        }
+
+        /* 全屏按钮 - 玻璃拟态风格 */
+        #fullscreen-btn {
+            position: fixed; top: 20px; right: 20px; z-index: 99999;
+            width: 60px; height: 60px; border: none; border-radius: 50%;
+            background: rgba(255,255,255,0.25);
+            backdrop-filter: blur(10px);
+            box-shadow: 0 8px 32px rgba(0,0,0,0.2);
+            cursor: pointer; display: flex; align-items: center; justify-content: center;
+            transition: all 0.3s ease;
+        }
+        #fullscreen-btn:hover {
+            transform: scale(1.1);
+            background: rgba(255,255,255,0.4);
+        }
+        #fullscreen-btn svg {
+            width: 28px; height: 28px; fill: var(--white);
+            filter: drop-shadow(0 2px 4px rgba(0,0,0,0.3));
+        }
+
+        #star-layer { position: absolute; width: 100%; height: 100%; pointer-events: none; }
+
+        /* 彩虹气球 */
+        .balloon {
+            position: absolute; width: 80px; height: 100px;
+            border-radius: 50% 50% 50% 50% / 60% 60% 40% 40%;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+            animation: balloonFloat 4s infinite ease-in-out;
+        }
+        .balloon::after {
+            content: ''; position: absolute; width: 2px; height: 100px;
+            background: #333; left: 50%; bottom: -100px; transform: translateX(-50%);
+        }
+
+        /* 主舞台 */
+        .stage {
+            display: flex; width: 100%; height: 100%;
+            align-items: center; justify-content: center;
+            gap: 120px; padding: 50px; box-sizing: border-box;
+            position: relative; z-index: 50;
+        }
+
+        /* 照片装饰 */
+        .photo-wrapper { position: relative; }
+        .magic-wand {
+            position: absolute; top: -75px; right: -50px;
+            font-size: 90px; z-index: 60;
+            filter: drop-shadow(6px 6px 0 rgba(0,0,0,0.2));
+            animation: wandSparkle 2s infinite;
+        }
+        .photo-container {
+            width: 420px; height: 420px;
+            background: #fff; padding: 0px; border-radius: 40px;
+            box-shadow: 20px 20px 0px rgba(0,0,0,0.15);
+            border: 12px solid var(--candy-pink);
+            position: relative; cursor: pointer;
+            transform: rotate(1deg);
+            display: flex; align-items: center; justify-content: center;
+            overflow: hidden; transition: 0.4s;
+        }
+        .photo-container:hover { transform: rotate(0deg) scale(1.08); }
+        #baby-photo { width: 100%; height: 100%; object-fit: cover; display: none; }
+
+        /* 祝福语贴纸 */
+        .wish-tag {
+            position: absolute; padding: 12px 28px;
+            font-size: 2rem; font-weight: bold;
+            box-shadow: 10px 10px 0 rgba(0,0,0,0.12);
+            z-index: 30; animation: candyFloat 5s infinite ease-in-out;
+            white-space: nowrap;
+        }
+        .tag-lollipop { background: var(--candy-yellow); border-radius: 30px; border: 5px dotted var(--dark); }
+        .tag-star { background: var(--candy-pink); color: white; clip-path: polygon(50% 0%, 61% 35%, 98% 35%, 68% 57%, 79% 91%, 50% 70%, 21% 91%, 32% 57%, 2% 35%, 39% 35%); }
+        .tag-cloud { background: var(--candy-blue); color: white; border-radius: 50px; border: 4px solid var(--white); }
+        .tag-heart { background: var(--candy-green); color: var(--dark); transform: rotate(-15deg); border-radius: 50% 0; }
+
+        /* 图标装饰 */
+        .item { position: absolute; z-index: 10; filter: drop-shadow(8px 8px 0 rgba(0,0,0,0.1)); animation: candyFloat 6s infinite; }
+
+        /* 标题区域 */
+        .main-title {
+            font-size: 10rem; color: var(--white);
+            text-shadow: 10px 10px 0px var(--dark);
+            margin: 0; letter-spacing: 12px;
+            animation: candyPop 1.8s infinite alternate;
+        }
+        .date-sticker {
+            background: var(--candy-orange); padding: 15px 45px; border-radius: 60px;
+            border: 5px solid #333; font-size: 2.3rem; transform: rotate(-2deg);
+            margin-top: 60px; color: white;
+        }
+
+        /* 动画库 */
+        @keyframes balloonFloat { 0%, 100% { transform: translateY(0) rotate(-5deg); } 50% { transform: translateY(-30px) rotate(5deg); } }
+        @keyframes wandSparkle { 0%, 100% { transform: scale(1) rotate(0deg); } 50% { transform: scale(1.2) rotate(10deg); } }
+        @keyframes candyFloat {
+            0%, 100% { transform: translate(0, 0) rotate(var(--r)); }
+            50% { transform: translate(15px, -25px) rotate(calc(var(--r) + 8deg)); }
+        }
+        @keyframes candyPop { from { transform: scale(1); } to { transform: scale(1.06); } }
+
+        .bottom-banner {
+            position: absolute; bottom: 25px; width: 100%;
+            text-align: center; font-size: 2.5rem; color: white;
+            letter-spacing: 18px; z-index: 100; font-weight: bold;
+            text-shadow: 3px 3px 6px rgba(0,0,0,0.4);
+        }
+
+        #crop-modal {
+            display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0,0,0,0.92); z-index: 9999;
+            flex-direction: column; align-items: center; justify-content: center;
+        }
+        .crop-container { width: 80%; max-height: 70vh; background: #fff; }
+
+        #confetti-canvas {
+            position: fixed; top: 0; left: 0;
+            width: 100%; height: 100%;
+            pointer-events: none; z-index: 1000;
+        }
+    </style>
+</head>
+<body>
+
+    <!-- 全屏按钮 -->
+    <button id="fullscreen-btn" title="全屏显示">
+        <svg viewBox="0 0 24 24">
+            <path d="M7 14H5v5h5v-2H7v-3zm-2-4h2V7h3V5H5v5zm12 7h-3v2h5v-5h-2v3zM14 5v2h3v3h2V5h-5z"/>
+        </svg>
+    </button>
+
+    <canvas id="confetti-canvas"></canvas>
+    <div id="star-layer"></div>
+
+    <!-- 彩虹气球 -->
+    <div class="balloon" style="top: 10%; left: 5%; background: var(--candy-pink); animation-delay: 0s;"></div>
+    <div class="balloon" style="top: 15%; right: 8%; background: var(--candy-yellow); animation-delay: 1s;"></div>
+    <div class="balloon" style="bottom: 20%; left: 8%; background: var(--candy-blue); animation-delay: 2s;"></div>
+    <div class="balloon" style="top: 20%; left: 50%; background: var(--candy-orange); animation-delay: 1.5s;"></div>
+
+    <!-- 祝福语贴纸 -->
+    <div class="wish-tag tag-lollipop" style="top: 12%; left: 10%; --r: -8deg;">🍭 聪明加倍</div>
+    <div class="wish-tag tag-star" style="top: 8%; right: 15%; --r: 12deg;">⭐ 闪闪发光</div>
+    <div class="wish-tag tag-cloud" style="bottom: 30%; left: 6%; --r: -6deg;">☁️ 快乐翻倍</div>
+    <div class="wish-tag tag-heart" style="bottom: 18%; right: 8%; --r: 10deg;">💚 健康成长</div>
+    <div class="wish-tag tag-lollipop" style="top: 35%; left: 3%; --r: 15deg; background: var(--candy-green);">🌟 魔法成长</div>
+    <div class="wish-tag tag-star" style="top: 50%; right: 5%; --r: -10deg; background: var(--candy-orange);">🎨 创意无限</div>
+    <div class="wish-tag tag-cloud" style="top: 18%; left: 40%; --r: 8deg; background: var(--candy-pink);">🌈 五彩斑斓</div>
+    <div class="wish-tag tag-heart" style="bottom: 12%; left: 35%; --r: -12deg; background: var(--candy-yellow); color: var(--dark);">🎂 两岁快乐</div>
+    <div class="wish-tag tag-lollipop" style="bottom: 28%; right: 25%; --r: 6deg; background: var(--candy-blue);">🍬 甜甜蜜蜜</div>
+    <div class="wish-tag tag-star" style="top: 75%; left: 12%; --r: -4deg; background: var(--white); color: var(--dark);">☀️ 阳光宝贝</div>
+
+    <!-- 图标装饰 -->
+    <div class="item" style="top: 6%; left: 3%; font-size: 110px;">🍭</div>
+    <div class="item" style="top: 4%; right: 3%; font-size: 130px;">🌈</div>
+    <div class="item" style="bottom: 4%; left: 4%; font-size: 150px;">🍬</div>
+    <div class="item" style="bottom: 6%; right: 4%; font-size: 140px;">🎂</div>
+    <div class="item" style="top: 22%; left: 22%; font-size: 70px;">✨</div>
+    <div class="item" style="top: 28%; right: 28%; font-size: 60px;">🧁</div>
+    <div class="item" style="top: 24%; right: 48%; font-size: 55px;">🍩</div>
+    <div class="item" style="bottom: 35%; left: 7%; font-size: 90px;">🧸</div>
+    <div class="item" style="top: 58%; right: 6%; font-size: 100px;">🍦</div>
+    <div class="item" style="top: 23%; right: 15%; font-size: 80px;">🍪</div>
+    <div class="item" style="bottom: 22%; left: 48%; font-size: 65px;">🍡</div>
+    <div class="item" style="top: 3%; left: 46%; font-size: 55px;">☁️</div>
+
+    <div class="stage">
+        <div class="photo-wrapper">
+            <div class="magic-wand">🪄</div>
+            <div class="photo-container" onclick="document.getElementById('file-input').click()">
+                <img id="baby-photo" src="">
+                <div id="upload-hint" style="display: flex;flex-direction: column;justify-content: center;align-items: center;">
+                    <p style="font-size:80px; margin:0;">👧</p>
+                    <p style="font-size:2rem; margin:10px 0;">点击上传(支持裁剪)</p>
+                </div>
+            </div>
+            <input type="file" id="file-input" hidden accept="image/*">
+        </div>
+
+        <div class="text-area">
+            <h1 class="main-title">两周岁啦</h1>
+            <div class="date-sticker">
+                <span style="margin-left: 15px;">愿你的童年如糖果般甜美多彩</span>
+            </div>
+        </div>
+    </div>
+
+    <div class="bottom-banner">
+        ✦ SWEET 2ND BIRTHDAY ✦ MAGIC GIRL ✦ SWEET 2ND BIRTHDAY ✦
+    </div>
+
+    <div id="crop-modal">
+        <div class="crop-container"><img id="crop-image" src=""></div>
+        <button onclick="confirmCrop()" style="padding:15px 60px; font-size:2rem; background:var(--candy-yellow); border:none; border-radius:50px; margin-top:30px; cursor:pointer; font-family:inherit; font-weight:bold;">完成裁剪</button>
+    </div>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.5.13/cropper.min.js"></script>
+    <script>
+        // 全屏功能
+        const fullscreenBtn = document.getElementById('fullscreen-btn');
+        fullscreenBtn.addEventListener('click', () => {
+            if (!document.fullscreenElement) {
+                document.documentElement.requestFullscreen().catch(err => {
+                    alert(`无法进入全屏模式: ${err.message}`);
+                });
+            } else {
+                document.exitFullscreen();
+            }
+        });
+
+        // 监听全屏状态变化，切换图标
+        document.addEventListener('fullscreenchange', () => {
+            const svg = fullscreenBtn.querySelector('svg path');
+            if (document.fullscreenElement) {
+                // 退出全屏图标
+                svg.setAttribute('d', 'M5 16h3v3h2v-5H5v2zm3-8H5v2h5V5H8v3zm6 11h2v-3h3v-2h-5v5zm2-11V5h-2v5h5V8h-3z');
+            } else {
+                // 进入全屏图标
+                svg.setAttribute('d', 'M7 14H5v5h5v-2H7v-3zm-2-4h2V7h3V5H5v5zm12 7h-3v2h5v-5h-2v3zM14 5v2h3v3h2V5h-5z');
+            }
+        });
+
+        // 动态背景星星
+        const starLayer = document.getElementById('star-layer');
+        for (let i = 0; i < 50; i++) {
+            const star = document.createElement('div');
+            star.innerHTML = '✦';
+            star.style.position = 'absolute';
+            star.style.left = Math.random() * 100 + 'vw';
+            star.style.top = Math.random() * 100 + 'vh';
+            star.style.color = 'white';
+            star.style.opacity = Math.random() * 0.6;
+            star.style.fontSize = Math.random() * 25 + 15 + 'px';
+            star.style.animation = `candyPop ${Math.random()*3+2}s infinite alternate`;
+            starLayer.appendChild(star);
+        }
+
+        // 裁剪逻辑
+        const fileInput = document.getElementById('file-input');
+        const cropModal = document.getElementById('crop-modal');
+        const cropImage = document.getElementById('crop-image');
+        const babyPhoto = document.getElementById('baby-photo');
+        let cropper = null;
+
+        fileInput.addEventListener('change', function(e) {
+            const file = e.target.files[0];
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = function(event) {
+                    cropImage.src = event.target.result;
+                    cropModal.style.display = 'flex';
+                    if(cropper) cropper.destroy();
+                    setTimeout(() => {
+                        cropper = new Cropper(cropImage, { aspectRatio: 1, viewMode: 1 });
+                    }, 100);
+                };
+                reader.readAsDataURL(file);
+            }
+        });
+
+        function confirmCrop() {
+            const canvas = cropper.getCroppedCanvas({ width: 800, height: 800 });
+            babyPhoto.src = canvas.toDataURL();
+            babyPhoto.style.display = 'block';
+            document.getElementById('upload-hint').style.display = 'none';
+            cropModal.style.display = 'none';
+        }
+    </script>
+    <script>
+        // 糖果彩屑系统
+        const canvas = document.getElementById('confetti-canvas');
+        const ctx = canvas.getContext('2d');
+        let canvasW, canvasH;
+        const particles = [];
+        const colors = ['#f15bb5', '#fee440', '#00bbf9', '#fb8500', '#00f5d4', '#ffffff'];
+        const shapes = ['square', 'circle', 'star'];
+
+        function initCanvas() {
+            canvasW = canvas.width = window.innerWidth;
+            canvasH = canvas.height = window.innerHeight;
+        }
+
+        window.addEventListener('resize', initCanvas);
+        initCanvas();
+
+        class Particle {
+            constructor() {
+                this.reset();
+            }
+            reset() {
+                this.x = Math.random() * canvasW;
+                this.y = Math.random() * canvasH - canvasH;
+                this.size = Math.random() * 12 + 10;
+                this.color = colors[Math.floor(Math.random() * colors.length)];
+                this.shape = shapes[Math.floor(Math.random() * shapes.length)];
+                this.speedX = Math.random() * 3 - 1.5;
+                this.speedY = Math.random() * 4 + 3;
+                this.rotation = Math.random() * 360;
+                this.rotationSpeed = Math.random() * 15 - 7.5;
+            }
+            update() {
+                this.y += this.speedY;
+                this.x += this.speedX;
+                this.rotation += this.rotationSpeed;
+                if (this.y > canvasH) this.reset();
+            }
+            draw() {
+                ctx.save();
+                ctx.translate(this.x, this.y);
+                ctx.rotate(this.rotation * Math.PI / 180);
+                ctx.fillStyle = this.color;
+                ctx.beginPath();
+                if (this.shape === 'circle') {
+                    ctx.arc(0, 0, this.size / 2, 0, Math.PI * 2);
+                } else if (this.shape === 'star') {
+                    for (let i = 0; i < 5; i++) {
+                        ctx.lineTo(Math.cos((18 + i * 72) * Math.PI / 180) * this.size / 2,
+                                  -Math.sin((18 + i * 72) * Math.PI / 180) * this.size / 2);
+                        ctx.lineTo(Math.cos((54 + i * 72) * Math.PI / 180) * this.size / 4,
+                                  -Math.sin((54 + i * 72) * Math.PI / 180) * this.size / 4);
+                    }
+                } else {
+                    ctx.fillRect(-this.size / 2, -this.size / 2, this.size, this.size);
+                }
+                ctx.fill();
+                ctx.restore();
+            }
+        }
+
+        for (let i = 0; i < 120; i++) {
+            particles.push(new Particle());
+        }
+
+        function animate() {
+            ctx.clearRect(0, 0, canvasW, canvasH);
+            particles.forEach(p => {
+                p.update();
+                p.draw();
+            });
+            requestAnimationFrame(animate);
+        }
+        animate();
+
+    </script>
+</body>
+</html>

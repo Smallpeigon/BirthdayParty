@@ -8,7 +8,8 @@
       "Bash(git push -u origin master)",
       "WebSearch",
       "WebFetch(domain:api.ipify.org)",
-      "Bash(git add -A)"
+      "Bash(git add -A)",
+      "Bash(git commit -m \"$\\(cat <<''EOF''\nAdd birthday party HTML templates with README\n\n- Add one-year.html: 1st birthday celebration page with red theme\n- Add two-year.html: 2nd birthday celebration page with purple candy theme\n- Add README.md: Complete documentation with features, usage guide, and customization tips\n\nCo-Authored-By: Claude Opus 4.6 <noreply@anthropic.com>\nEOF\n\\)\")"
     ]
   }
 }
